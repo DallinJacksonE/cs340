@@ -1,16 +1,15 @@
 import "./Toaster.css";
 import { useEffect } from "react";
-import { useContext } from "react";
-import { ToastListContext, ToastActionsContext } from "./ToastContexts";
 import { Toast } from "react-bootstrap";
+import { useMessageActions, useMessageList } from "./MessageHooks";
 
 interface Props {
   position: string;
 }
 
 const Toaster = ({ position }: Props) => {
-  const toastList = useContext(ToastListContext);
-  const { deleteToast } = useContext(ToastActionsContext);
+  const toastList = useMessageList();
+  const { deleteMessage } = useMessageActions();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -33,7 +32,7 @@ const Toaster = ({ position }: Props) => {
         toast.expirationMillisecond > 0 &&
         toast.expirationMillisecond < now
       ) {
-        deleteToast(toast.id);
+        deleteMessage(toast.id);
       }
     }
   };
@@ -48,7 +47,7 @@ const Toaster = ({ position }: Props) => {
             className={toast.bootstrapClasses}
             autohide={false}
             show={true}
-            onClose={() => deleteToast(toast.id)}
+            onClose={() => deleteMessage(toast.id)}
           >
             <Toast.Header>
               <img

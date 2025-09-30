@@ -1,13 +1,8 @@
 import Post from "./Post";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthToken, User, Status, FakeData } from "tweeter-shared";
-import { ToastType } from "../toaster/Toast";
-import { useContext } from "react";
-import {
-  UserInfoActionsContext,
-  UserInfoContext,
-} from "../userInfo/UserInfoContexts";
-import { ToastActionsContext } from "../toaster/ToastContexts";
+import { useMessageActions } from "../toaster/MessageHooks";
+import { useUserInfo, useUserInfoActions } from "../userInfo/UserInfoHooks";
 
 interface Props {
   status: Status;
@@ -16,9 +11,9 @@ interface Props {
 
 
 const StatusItem = (props: Props) => {
-  const { displayToast } = useContext(ToastActionsContext);
-  const { displayedUser, authToken } = useContext(UserInfoContext);
-  const { setDisplayedUser } = useContext(UserInfoActionsContext);
+  const { displayErrorMessage } = useMessageActions();
+  const { displayedUser, authToken } = useUserInfo();
+  const { setDisplayedUser } = useUserInfoActions();
 
   const navigate = useNavigate();
 
@@ -37,10 +32,8 @@ const StatusItem = (props: Props) => {
         }
       }
     } catch (error) {
-      displayToast(
-        ToastType.Error,
+      displayErrorMessage(
         `Failed to get user because of exception: ${error}`,
-        0
       );
     }
   };
@@ -78,7 +71,7 @@ const StatusItem = (props: Props) => {
               </b>{" "}
               -{" "}
               <Link
-                to={`/feed/${props.status.user.alias}`}
+                to={`/${props.featurePath}/${props.status.user.alias}`}
                 onClick={navigateToUser}
               >
                 {props.status.user.alias}

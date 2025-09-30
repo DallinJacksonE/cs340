@@ -1,20 +1,26 @@
-import { useContext } from "react";
-import {
-  UserInfoContext,
-  UserInfoActionsContext,
-} from "../userInfo/UserInfoContexts";
 import { AuthToken, FakeData, Status, User } from "tweeter-shared";
 import { useState, useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { ToastActionsContext } from "../toaster/ToastContexts";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ToastType } from "../toaster/Toast";
-import StatusItem from "../statusItem/StatusItem";
+import StatusItem from "../../statusItem/StatusItem";
+import { useMessageActions } from "../../toaster/MessageHooks";
+import { useUserInfo, useUserInfoActions } from "../../userInfo/UserInfoHooks";
+
 
 export const PAGE_SIZE = 10;
 
-const StoryScroller = () => {
-  const { displayToast } = useContext(ToastActionsContext);
+interface Props {
+  getData: (
+    authToken: AuthToken,
+    userAlias: string,
+    pageSize: number,
+    lastUser: Status | null
+  ) => Promise<[Status[], boolean]>;
+  pageType: "story" | "feed";
+}
+
+const StatusItemScroller = (props: Props) => {
+  const { displayErrorMessage } = useMessageActions();
   const [items, setItems] = useState<Status[]>([]);
   const [hasMoreItems, setHasMoreItems] = useState(true);
   const [lastItem, setLastItem] = useState<Status | null>(null);
@@ -23,8 +29,8 @@ const StoryScroller = () => {
   const addItems = (newItems: Status[]) =>
     setItems((previousItems) => [...previousItems, ...newItems]);
 
-  const { displayedUser, authToken } = useContext(UserInfoContext);
-  const { setDisplayedUser } = useContext(UserInfoActionsContext);
+  const { displayedUser, authToken } = useUserInfo();
+  const { setDisplayedUser } = useUserInfoActions();
   const { displayedUser: displayedUserAliasParam } = useParams();
 
   // Update the displayed user context variable whenever the displayedUser url parameter changes. This allows browser forward and back buttons to work correctly.
@@ -56,7 +62,7 @@ const StoryScroller = () => {
 
   const loadMoreItems = async (lastItem: Status | null) => {
     try {
-      const [newItems, hasMore] = await loadMoreStoryItems(
+      const [newItems, hasMore] = await props.getData(
         authToken!,
         displayedUser!.alias,
         PAGE_SIZE,
@@ -67,22 +73,10 @@ const StoryScroller = () => {
       setLastItem(() => newItems[newItems.length - 1]);
       addItems(newItems);
     } catch (error) {
-      displayToast(
-        ToastType.Error,
-        `Failed to load story items because of exception: ${error}`,
-        0
+      displayErrorMessage(
+        `Failed to load ${props.pageType} items because of exception: ${error}`,
       );
     }
-  };
-
-  const loadMoreStoryItems = async (
-    authToken: AuthToken,
-    userAlias: string,
-    pageSize: number,
-    lastItem: Status | null
-  ): Promise<[Status[], boolean]> => {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getPageOfStatuses(lastItem, pageSize);
   };
 
   const navigateToUser = async (event: React.MouseEvent): Promise<void> => {
@@ -96,14 +90,12 @@ const StoryScroller = () => {
       if (toUser) {
         if (!toUser.equals(displayedUser!)) {
           setDisplayedUser(toUser);
-          navigate(`/story/${toUser.alias}`);
+          navigate(`/${props.pageType}/${toUser.alias}`);
         }
       }
     } catch (error) {
-      displayToast(
-        ToastType.Error,
+      displayErrorMessage(
         `Failed to get user because of exception: ${error}`,
-        0
       );
     }
   };
@@ -135,7 +127,7 @@ const StoryScroller = () => {
             key={index}
             className="row mb-3 mx-0 px-0 border rounded bg-white"
           >
-            <StatusItem status={item} featurePath="/story" />
+            <StatusItem status={item} featurePath={`${props.pageType}`} />
           </div>
         ))}
       </InfiniteScroll>
@@ -143,4 +135,4 @@ const StoryScroller = () => {
   );
 };
 
-export default StoryScroller;
+export default StatusItemScroller;
