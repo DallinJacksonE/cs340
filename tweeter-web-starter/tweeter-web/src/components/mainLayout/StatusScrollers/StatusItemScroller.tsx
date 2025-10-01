@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import StatusItem from "../../statusItem/StatusItem";
 import { useMessageActions } from "../../toaster/MessageHooks";
 import { useUserInfo, useUserInfoActions } from "../../userInfo/UserInfoHooks";
+import { useUserNavigation } from "../../userNavigation/UserNavigationHooks";
 
 
 export const PAGE_SIZE = 10;
@@ -24,7 +25,7 @@ const StatusItemScroller = (props: Props) => {
   const [items, setItems] = useState<Status[]>([]);
   const [hasMoreItems, setHasMoreItems] = useState(true);
   const [lastItem, setLastItem] = useState<Status | null>(null);
-  const navigate = useNavigate();
+  const { getUser } = useUserNavigation();
 
   const addItems = (newItems: Status[]) =>
     setItems((previousItems) => [...previousItems, ...newItems]);
@@ -77,40 +78,6 @@ const StatusItemScroller = (props: Props) => {
         `Failed to load ${props.pageType} items because of exception: ${error}`,
       );
     }
-  };
-
-  const navigateToUser = async (event: React.MouseEvent): Promise<void> => {
-    event.preventDefault();
-
-    try {
-      const alias = extractAlias(event.target.toString());
-
-      const toUser = await getUser(authToken!, alias);
-
-      if (toUser) {
-        if (!toUser.equals(displayedUser!)) {
-          setDisplayedUser(toUser);
-          navigate(`/${props.pageType}/${toUser.alias}`);
-        }
-      }
-    } catch (error) {
-      displayErrorMessage(
-        `Failed to get user because of exception: ${error}`,
-      );
-    }
-  };
-
-  const extractAlias = (value: string): string => {
-    const index = value.indexOf("@");
-    return value.substring(index);
-  };
-
-  const getUser = async (
-    authToken: AuthToken,
-    alias: string
-  ): Promise<User | null> => {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.findUserByAlias(alias);
   };
 
   return (

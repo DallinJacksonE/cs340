@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import UserItem from "../../userItem/UserItem";
 import { useMessageActions } from "../../toaster/MessageHooks";
 import { useUserInfo, useUserInfoActions } from "../../userInfo/UserInfoHooks";
+import { useUserNavigation } from "../../userNavigation/UserNavigationHooks";
 
 export const PAGE_SIZE = 10;
 
@@ -30,6 +31,7 @@ const UserItemScroller = (props: props) => {
   const { displayedUser, authToken } = useUserInfo();
   const { setDisplayedUser } = useUserInfoActions();
   const { displayedUser: displayedUserAliasParam } = useParams();
+  const { getUser } = useUserNavigation();
 
   // Update the displayed user context variable whenever the displayedUser url parameter changes. This allows browser forward and back buttons to work correctly.
   useEffect(() => {
@@ -75,14 +77,6 @@ const UserItemScroller = (props: props) => {
         `Failed to load ${props.pageType} because of exception: ${error}`,
       );
     }
-  };
-
-  const getUser = async (
-    authToken: AuthToken,
-    alias: string
-  ): Promise<User | null> => {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.findUserByAlias(alias);
   };
 
   return (
